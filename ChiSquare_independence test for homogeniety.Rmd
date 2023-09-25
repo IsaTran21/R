@@ -1,0 +1,93 @@
+---
+title: "Chisquare independence test for homogeniety"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+## When to use?
+
+**The Chi-Square Test for Homogeneity answers the following type of question:**
+
+"Are the distributions of a categorical variable the same or different among different groups or populations?" In other words, it helps determine whether there is a significant difference in how two or more groups or populations respond to or are distributed across categories within a categorical variable. This test assesses whether the observed differences, if any, are statistically significant or if they could have occurred by chance. For example, consider a study comparing the favorite ice cream flavors among three different age groups: children, teenagers, and adults. The Chi-Square Test for Homogeneity could answer whether the distribution of ice cream flavor preferences is the same or different among these three age groups. If the test results show a significant difference, it would indicate that age is associated with differences in ice cream flavor preferences among the groups.
+
+**Assumption to use the Chi-square test for homogeneity:**
+  <br>Categorical Data: Analyzing categorical variables grouped by different categories.
+  <br>Independence: Ensuring that observations in each group are independent.
+  <br>Random Sampling: Using random sampling for data collection.
+  <br>Expected Frequencies: Each cell in the contingency table should have expected frequencies of at least 5.
+  <br>Mutually Exclusive Categories: Categories being compared should be mutually exclusive.
+  <br>Sample Size: A reasonably large sample size is preferred.
+  
+### Problem 1: altitudes and flowers
+
+A group of researchers wants to investigate whether the distribution of flower color in a specific type of wildflower varies among different altitudes in a mountainous region. They collect data on the flower color of this wildflower species at three different altitudes: Lowland (up to 500 meters above sea level), Mid-altitude (between 500 and 1500 meters), and High-altitude (above 1500 meters). They want to determine if altitude has an impact on the distribution of flower colors. Is there a significant difference in the distribution of flower colors among the wildflowers at different altitudes (Lowland, Mid-altitude, and High-altitude)?
+
+```{r}
+# Create a matrix for the contingency table
+data <- matrix(c(45, 20, 5, 30, 15, 25, 15, 40, 20), nrow = 3, byrow = TRUE)
+# Add row and column names
+rownames(data) <- c("Red", "Blue", "Yellow")
+colnames(data) <- c("Lowland", "Mid-altitude", "High-altitude")
+# Create the table
+cross_table <- as.table(data)
+# Print the table
+print(cross_table)
+
+```
+
+#### The hypotheses
+
+We have different ways to write the hypotheses:
+
+
+1. All H0 must be met (The distributions of flower colors is the same for all altitudes.)  
+<br>H0: P(Red in Lowland) = P(Blue in Lowland) = P(Yellow in Lowland)
+<br>H0: P(Red in Mid-altitude) = P(Blue in Mid-altitude) = P(Yellow in Mid-altitude)
+<br>H0: P(Red in High-altitude) = P(Blue in High-altitude) = P(Yellow in High-altitude)
+<br>H1: At least one of the H0 above is false (The distributions of flower colors differs among all altitudes.)
+2. Use conditional probability - All H0 must be met:
+<br>H0: P(Lowland | Red)  = P(Lowland | Blue)  = P(Lowland | Yellow)
+<br>H0: P(Mid-altitude | Red)  = P(Mid-altitude | Blue)  = P(Mid-altitude | Yellow)
+<br>H0: P(High-altitude | Red)  = P(High-altitude | Blue)  = P(High-altitude | Yellow)
+<br>H1: At least one of the H0 above is false.
+
+#### Perform Chi-square test
+
+```{r}
+chisq.test(cross_table)
+```
+Conclusion: the p-value < 0.05 => there is enough evidence to reject H0, which means that The distributions of flower colors differs among all altitudes. 
+
+
+### Problem 2: tail and head
+
+Let's flip a fair coin, and a bias coin to see if the chi-square test can detect the difference. We first flip the fair coin 300 times and the bias coin 150 times. Then we create the cross table.
+
+```{r}
+set.seed(2001)
+fair_coin <- sample(1:2, 300, p=c(1,1)/2, replace=TRUE)
+bias_coin <- sample(1:2, 150, p=c(0.5, 1.5)/2, replace=TRUE)
+
+cross_table <- rbind(table(fair_coin),table(bias_coin))
+colnames(cross_table) <- c("head", "tail")
+rownames(cross_table) <- c("fair", "bias")
+cross_table
+```
+
+
+#### The hypothesis
+H0: all following H0 must be met (The distributions of the fair and bias is the same for head and tail.)
+<br>H0: P(head | fair)  = P(head | bias) 
+<br>H0: P(tail | fair)  = P(tail | bias) 
+<br>H1: At least one of the H0 above is false (The distributions of the fair and bias differs among head and tail.)
+
+#### Perform Chi-square test
+
+```{r}
+chisq.test(cross_table)
+```
+
+Conclusion: the p-value < 0.05 (even we set the level of significance of 0.01, p-value is very small). Therefore, there is enough evidence to reject H0, in other words, the distributions of the fair and bias differs among head and tail. Better news is that the fair coin and bias coin come from different distribution (and it's the fact because of our simulation) => Chi-square is able to detect it!

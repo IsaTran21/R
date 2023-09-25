@@ -1,0 +1,137 @@
+---
+title: "Chi Square test for independence"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+## What is Chi-Square test for independence?
+
+
+The Chi-Square test for independence is a statistical test used to determine if there is a significant association between two categorical variables.
+
+1. **Chi-Square Test Statistic:**
+
+   The Chi-Square test statistic (\(\chi^2\)) is calculated as:
+
+   \[
+   \chi^2 = \sum \frac{(O_{ij} - E_{ij})^2}{E_{ij}}
+   \]
+
+   where \(O_{ij}\) represents the observed frequency, and \(E_{ij}\) represents the expected frequency in cell (i, j).
+
+2. **Expected Frequency for a Cell (E):**
+
+   The expected frequency for a cell (i, j) is calculated as:
+
+   \[
+   E_{ij} = \frac{(n_i \cdot n_j)}{N}
+   \]
+
+   Where \(n_i\) represents the total count in row i, \(n_j\) represents the total count in column j, and N represents the total sample size.
+
+3. **Degrees of Freedom (df):**
+
+   The degrees of freedom for the Chi-Square test for independence is given by:
+
+   \[
+   df = (r - 1) \cdot (c - 1)
+   \]
+   
+   Where r is the number of rows and c is the number of columns in the contingency table.
+   
+### Problem 1: job and marital status
+
+#### The dataset is obtained from Kaggle:
+[Dataset link](https://www.kaggle.com/datasets/volodymyrgavrysh/bank-marketing-campaigns-dataset)
+
+It is a dataset that describing Portugal bank marketing campaigns results.
+Conducted campaigns were based mostly on direct phone calls, offering bank client to place a term deposit.
+If after all marking afforts client had agreed to place deposit - target variable marked 'yes', otherwise 'no'.
+
+We will check whether or not the job depends on the marital status?
+
+
+```{r}
+df <- read.csv('bank.csv',sep=";")
+#head(df)
+colnames(df)
+```
+```{r}
+# View the structure of the dataframe
+print(unique(df$job))
+print(unique(df$marital))
+
+```
+
+**Create frequecy table for job and education**
+```{r}
+# Create a frequency table for the 'Name' column
+jobs <- table(df$job)
+edu <- table(df$marital)
+cross_table <- table(df$job, df$marital)
+# Display the cross table
+print(cross_table)
+
+```
+**Hypotheses**
+
+<br>H0: type of job depends on the marital status
+<br>H1: type of job does not depend on the marital status
+
+**Perform Chi square test for independence**
+
+```{r}
+chisq.test(cross_table)
+```
+Comment: we can see the error "Warning in chisq.test(cross_table) :
+  Chi-squared approximation may be incorrect" is because the assumption that the frequency in each cell must be greater than 5, and we can remove the "unknown" from both marital and job because it does not contribute much to the result.
+```{r}
+cross_table <- cross_table[-which(rownames(cross_table) == "unknown"), -which(colnames(cross_table) == "unknown")]
+cross_table
+```
+  
+**Perform Chi square test for independence**
+
+```{r}
+chisq.test(cross_table)
+```
+Now, we don't see the error anymore.
+
+Conclusion: p-value is much less than the level of significance 0.05 => there is enough evidence to reject H0, or we can say that the type of job does not depend on the marital status statistically.
+
+### Problem 2: genetic
+
+Suppose we are studying the inheritance of a genetic trait (Trait A) in a population and want to investigate whether there is a dependence between Trait A and a second genetic trait (Trait B), which has two categories: "Yes" and "No." We have data on 100 individuals, the level of significance is 0.05. This dataset is simulated as following.
+
+```{r}
+# Create a sample dataset
+set.seed(2001)  # for reproducibility
+n <- 100  # Total number of individuals
+# Simulate data for Trait A (categorical: "A1" or "A2")
+trait_a <- sample(c("A1", "A2"), n, replace = TRUE)
+# Simulate data for Trait B (categorical: "Yes" or "No")
+trait_b <- sample(c("Yes", "No"), n, replace = TRUE)
+# Create a dataframe
+genetic_data <- data.frame(TraitA = trait_a, TraitB = trait_b)
+# Create a contingency table
+cross_table <- table(genetic_data$TraitA, genetic_data$TraitB)
+# Display the contingency table
+print(cross_table)
+```
+
+**The hypotheses**
+
+<br>H0: There is no association between Trait A and Trait B (Trait A and Trait B are independent.)
+<br>H1: There is an association between Trait A and Trait B (Trait A and Trait B are dependent.)
+
+**Perform Chisquare test for independence**
+
+```{r}
+chisq.test(cross_table)
+```
+Conclusion: the p-value > 0.05, there is not enough evidence to reject H0.
+
+

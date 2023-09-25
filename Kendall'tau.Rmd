@@ -1,0 +1,67 @@
+---
+title: "Kendall's tau"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+
+### Theory
+
+
+**Kendall's Tau Formula**
+
+Kendall's Tau is a non-parametric measure of association between two variables. It is particularly useful when dealing with ordinal data or when the assumptions of parametric correlation measures like Pearson's correlation coefficient are not met. The formula for Kendall's Tau, denoted as τ (tau), is as follows:
+
+\[ \tau = \frac{{n_c - n_d}}{{\frac{1}{2}n(n-1)}} \]
+
+Where:
+<br> \( n_c \) is the number of concordant pairs (pairs of data points that have the same order in both <br> \( n_d \) is the number of discordant pairs (pairs of data points that have different orders in the two variables).
+<br> \( n \) is the total number of data points.
+
+It should be prefered over Spearman's correlation when there are few data points with many ranks available.
+
+
+**Hypotheses testing**
+
+
+- **Null Hypothesis (\(H_0\)):** There is no significant association between the two variables.
+
+  \[H_0: \tau = 0\]
+
+- **Alternative Hypothesis (\(H_1\)):** There is a significant association between the two variables.
+
+    \[H_1: \tau \neq 0\]
+
+      
+  
+### Problem 1: simulated dataset - kendall's tau
+
+```{r}
+x <- c(1, 2, 2, 4, 5)
+y <- c(5, 4, 2, 1, 3)
+ken.cor <- cor(x, y, method = "kendall")
+ken.cor
+```
+***Conclusion: ***the Kendall's Tau coefficient of approximately -0.5270463 suggests a moderate negative correlation between the two variables analyzed. This means that as one variable increases, the other tends to decrease.
+
+
+### Problem 2: simulated dataset - kendall's tau hypothesis testing
+
+- **H0** There is no significant association between the two variables.
+
+  \[H_0: \tau = 0\]
+
+- **H1** There is a significant association between the two variables.
+
+    \[H_1: \tau \neq 0\]
+    
+
+```{r}
+ken.test <- cor.test(x,y,method="kendall",)
+ken.test
+```
+
+Conclusion: p-value > 0.05 (the level of significance here), therefore, accept H0 => There is no significant association between the two variables.

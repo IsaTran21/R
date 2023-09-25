@@ -1,0 +1,126 @@
+---
+title: "one-way ANOVA"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+
+### Theory
+
+
+One-way ANOVA is a statistical method used to compare the averages of three or more groups. For instance, think about different classes of students, and we want to know if there's a significant difference in their average test scores. ANOVA helps us determine if these differences are likely real or simply due to random variation. It does this by analyzing the variation between the group averages and within each group. If the differences between the group averages are larger than the differences within each group, ANOVA suggests there's a meaningful difference between the groups. It's a statistical tool to decide if the groups are genuinely different or if the differences could be due to chance.
+
+
+**One-Way ANOVA Table**
+
+In a one-way ANOVA, we partition the total variation in the data into two components: variation between groups (SSB) and variation within groups (SSW). The analysis is used to test whether there are significant differences among group means.
+
+**Components of Variance**
+
+| Source of Variation | Sum of Squares (SS) | Degrees of Freedom (df) | Mean Square (MS) |
+|----------------------|---------------------|------------------------|------------------|
+| Between Groups (SSB) | \( SSB = \sum_{j=1}^{k} n_j (\bar{X}_j - \bar{X})^2 \) | \( df_{\text{between}} = k - 1 \) | \( MSB = \frac{SSB}{df_{\text{between}}} \) |
+| Within Groups (SSW) | \( SSW = \sum_{i=1}^{N} (X_i - \bar{X}_j)^2 \) | \( df_{\text{within}} = N - k \) | \( MSW = \frac{SSW}{df_{\text{within}}} \) |
+| Total (SST) | \( SST = \sum_{i=1}^{N} (X_i - \bar{X})^2 \) | \( df_{\text{total}} = N - 1 \) | - |
+
+**F-Statistic**
+
+The F-statistic is calculated as the ratio of the mean square between groups (MSB) to the mean square within groups (MSW):
+
+\[ F = \frac{MSB}{MSW} \]
+
+The F-statistic follows an F-distribution with \( df_{\text{between}} \) and \( df_{\text{within}} \) degrees of freedom.
+
+This table summarizes the components and calculations involved in a one-way ANOVA analysis.
+
+**Assumptions**
+
+
+- Independence: Data points should be independent.
+- Normality: Data within each group should be approximately normally distributed.
+- Homogeneity of Variance: Variances within groups should be roughly equal (std_max/std_min < 2)
+- Random Sampling: Data should be collected randomly.
+- Mutual Exclusivity: Each data point belongs to only one group.
+- No Significant Outliers: Outliers should not heavily influence results.
+- Equal Group Sizes (for balanced designs): Groups should have roughly equal sizes.
+
+**Steps**
+
+1. Check assumptions
+2. State the hypotheses
+3. Perform ANOVA
+4. Intepretation the results
+
+#### Relationship between ANOVA and Linear Regression
+
+
+ANOVA (Analysis of Variance) can be considered a special case of linear regression. Both ANOVA and linear regression are statistical techniques that share a common underlying framework known as the General Linear Model (GLM).  In both ANOVA and linear regression, the slopes (β coefficients) represent the change in the dependent variable for a one-unit change in the corresponding predictor. In ANOVA, predictors are categorical group variables, while in linear regression, predictors can be continuous or categorical.
+
+
+### Problem: insect weight
+**dataset**
+
+The weight of a type of insect with 3 different diet treatments.
+
+```{r}
+diet.1 <- c(1.1, 2.2, 1.7, 1.4, 1.6, 2.3, 1.4, 1.9, 0.8, 1.6, 1.2, 1.6, 1.6, 1.6, 1.5, 1.9)
+diet.2 <- c(1.7, 2.3, 1.8, 2.3, 2.5, 2.4, 2.5, 1.9, 2.2, 2.0, 2.4, 3.0, 2.0)
+diet.3 <- c(2.1, 2.5, 2.8, 2.1, 2.0, 2.2, 2.7, 2.3, 2.6, 2.4, 1.7, 1.4, 1.7, 1.4, 1.7, 2.4, 2.6)
+
+#Test the normality (can be separately of 3 treatments or better still the whole dataset)
+df <- data.frame(
+  diet = rep(c("diet.1", "diet.2", "diet.3"), times=c(length(diet.1), length(diet.2), length(diet.3))),
+  value = c(diet.1, diet.2, diet.3)
+)
+head(df)
+
+```
+
+```{r}
+#Check for normality
+mod <- lm(value ~ diet, data=df)
+qqnorm(residuals(mod), main="QQ plot of residuals")
+qqline(residuals(mod), col="red")
+```
+
+
+**Comment: **Look into the residual plot we can see that our dataset has normal distribution.
+The normality assumption in analysis of variance (ANOVA) refers to the assumption that the residuals (the differences between the observed values and the group means) follow a normal distribution. ANOVA is a statistical technique used to compare means between two or more groups or treatments. 
+ 
+**Perform one-way ANOVA - use oneway.test**
+
+
+**Hypothesis**
+H0: μ1 = μ2 = μ3 = ... = μk, where μ1, μ2, μ3, ... are the population means of 3 diets (The means of all diets are equal.)
+H1: At least one of μ1, μ2, μ3 not equal to the others. (At least one diet mean is different from the others)
+```{r}
+oneway.test(value ~ diet, data=df, var.equal=T)
+```
+
+
+**Conclusion: **
+p-value < 0.05 => enough evidence to reject H0.
+
+**Perform one-way ANOVA - anova(lm)**
+
+We can see the whole ANOVA table!
+
+```{r}
+anova(lm(value ~ diet, data=df))
+```
+
+
+**Conclusion: **
+p-value < 0.05 => enough evidence to reject H0.
+
+**Another way for ANOVA in R**
+```{r}
+ano.mod <- aov(value ~ diet, data=df)
+summary(ano.mod)
+```
+
+**Conclusion: **
+p-value < 0.05 => enough evidence to reject H0.

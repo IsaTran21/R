@@ -1,0 +1,108 @@
+---
+title: "Spearman correlation"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+```{r}
+library(readxl)
+```
+
+
+### Theory
+
+Spearman rank correlation doesn't assume normality, linearity, or homoscedasticity but requires monotonic relationships between variables. It's not suitable for non-monotonic associations. Like linear regression and correlation, it assumes independence among observations
+The formula for Spearman's rank correlation coefficient ($\rho$) is:
+
+\[
+\rho = 1 - \frac{6 \sum d^2}{n(n^2 - 1)}
+\]
+
+Where:
+<br> $\rho$ is the Spearman rank correlation coefficient.
+<br> $\sum d^2$ is the sum of the squared differences between the ranks of corresponding pairs of data points.
+<br> $n$ is the number of data points.
+
+**Other formula:**
+This formula "spills" the secret of Spearman's correlation.
+Indeed, one of the weakness of Pearson's correlation is the assumption of the linearity, because the Pearson's correlation measure the "linear relationship" between variables, but what if there is still correlation, and the correlation is not "linear" (non-linear correlation). The other weakness of Pearson's correlation is that it is sensitive to outliers, but the Spearman's correlation is not.
+
+*"The Spearman correlation coefficient is defined as the Pearson correlation coefficient between the rank variables"*
+
+The Spearman correlation coefficient (\(\rho\)) is defined as the Pearson correlation coefficient between the rank variables:
+
+\[
+\rho = \frac{\text{cov}(\text{rank}(X), \text{rank}(Y))}{\sigma_{\text{rank}(X)} \cdot \sigma_{\text{rank}(Y)}}
+\]
+
+Where:
+<br> \(\rho\) is Spearman's rank correlation coefficient.
+<br> \(\text{cov}(\text{rank}(X), \text{rank}(Y))\) is the covariance between the rank variables of \(X\) and \(Y\).
+<br> \(\sigma_{\text{rank}(X)}\) is the standard deviation of the rank variable of \(X\).
+<br> \(\sigma_{\text{rank}(Y)}\) is the standard deviation of the rank variable of \(Y\).
+
+**Null hypothesis**
+
+The null hypothesis is that the Spearman correlation coefficient, ρ ("rho"), is 0. A ρ of 0 means that the ranks of one variable do not covary with the ranks of the other variable; in other words, as the ranks of one variable increase, the ranks of the other variable do not increase (or decrease).
+
+
+### Problem 1: education
+
+```{r}
+df <- read_excel("education.xlsx")
+head(df)
+
+```
+
+
+```{r}
+print(min(df$degree))
+print(max(df$degree))
+print(min(df$Unemployment))
+print(max(df$Unemployment))
+```
+
+
+**Plot** the data
+
+
+```{r}
+xlim.val <- c(200, 700)
+ylim.val <- c(0, 200)
+# Create a scatter plot using the plot function
+plot(df$degree, df$Unemployment, 
+     xlab = "X", 
+     ylab = "Y", 
+     main = "Scatter Plot of X vs. Y",
+     pch = 19, 
+     col = "blue",
+     xlim=xlim.val,
+     ylim=ylim.val)
+```
+
+**Person's correlation**
+
+```{r}
+spearman.cor <- cor(df$degree, df$Unemployment, method="spearman")
+print(spearman.cor)
+```
+Conclusion: -0.8679246 indicates a strong negative monotonic relationship between the two variables being analyzed. Specifically: The value of -0.8679246 suggests a strong negative association. As one variable increases in rank, the other tends to decrease in rank. The relationship is monotonic, meaning it follows a consistent trend and doesn't necessarily have to be linear. The closer the Spearman correlation is to -1, the stronger the negative association. In practical terms, this means that as one variable increases in rank or value, the other variable tends to decrease in rank or value
+
+
+### Problem 2: hypothesis testing for education
+
+
+**Hypotheses**
+
+<br> H0: There is no significant monotonic association between the number of adults with a degree and unemployment per 100 in the population, and the Spearman correlation coefficient (ρ) is equal to zero.
+<br> H1: There is a significant monotonic association between the number of adults with a degree and unemployment per 100 in the population, and the Spearman correlation coefficient (ρ) is not equal to zero.
+
+```{r}
+spearman_test <- cor.test(df$degree, df$Unemployment, method = "spearman")
+print(spearman_test)
+```
+Small note: tied values are values that have the same rank. The Spearman correlation coefficient is based on ranks, and tied values can introduce some ambiguity in the calculation of ranks, potentially affecting the p-value calculation => I will ignore this warning in this project.
+
+***Conclusion:*** the p-value < 0.05, therefore, there is enough evidence to reject H0, in other words, there is a significant monotonic association between the number of adults with a degree and unemployment per 100 in the population.

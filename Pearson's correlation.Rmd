@@ -1,0 +1,138 @@
+---
+title: "Pearson correlation"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+## Theory
+
+Formula for Pearson correlation coefficient (r)
+\[ r = \frac{{\sum{(X_i - \bar{X})(Y_i - \bar{Y})}}}{{\sqrt{\sum{(X_i - \bar{X})^2} \cdot \sum{(Y_i - \bar{Y})^2}}}} \]
+
+Formula for sample Pearson correlation coefficient (r) with degrees of freedom adjustment
+\[ r = \frac{{\sum{(X_i - \bar{X})(Y_i - \bar{Y})}}}{{\sqrt{\left(\sum{(X_i - \bar{X})^2} - \frac{(\sum{(X_i - \bar{X})})^2}{n-1}\right) \cdot \left(\sum{(Y_i - \bar{Y})^2} - \frac{(\sum{(Y_i - \bar{Y})})^2}{n-1}\right)}}} \]
+
+Hypothesis test for Pearson correlation (testing if r is significantly different from 0)
+Formula for t-statistic
+\[ t = \frac{r \sqrt{n-2}}{\sqrt{1 - r^2}} \]
+
+Formula for degrees of freedom (df) in the hypothesis test
+\[ df = n - 2 \]
+
+
+Where:
+<br> X_i and Y_i are individual data points in the variables X and Y.
+<br> \(\bar{X}\) and \(\bar{Y}\) are the means of variables X and Y, respectively.
+<br> n is the number of data points (sample size).
+<br> r is the Pearson correlation coefficient.
+<br> t is the t-statistic for the hypothesis test.
+<br> df is the degrees of freedom.
+<br> p is the p-value.
+
+**Intiution of Pearson's correlation**
+<br> Pearson correlation (r) measures how two variables (X and Y) move together linearly.
+<br> It quantifies the extent to which data points deviate from their respective means and covary relative to their standard deviations.
+<br> r ranges from -1 (perfect negative linear relationship) to 1 (perfect positive linear relationship), with 0 indicating no linear relationship.
+<br> A positive  r suggests that as one variable increases, the other tends to increase linearly, and a negative r indicates the opposite.
+<br> The hypothesis test with the t-statistic and p-value helps determine if the observed correlation is statistically significant or likely due to random chance.
+
+**Assumption of Pearson correlation**
+
+1. Level of Measurement: The two variables should be measured at the interval or ratio level.
+2. Linear Relationship: There should exist a linear relationship between the two variables.
+3. Normality: Both variables should be roughly normally distributed (for hypothesis testing)
+4. Related Pairs: Each observation in the dataset should have a pair of values.
+5. No Outliers: There should be no extreme outliers in the dataset.
+
+## Problem 1: studying time and scores (simulated dataset)
+
+The dataset includes 100 observations which contain the number of studying hours and the scores a student gets within a week before an exam.
+y is the score and x is the number of
+y = 1.25*x + 5 + epsilon
+
+```{r}
+score <- function(nums){
+  #Set seed for reducible
+  set.seed(2001)
+  #Create nums individual from a normal distribution
+  x.values <- runif(n=nums, min=10, max=70)
+  #Create epsilon: random variable
+  epsilon <- rnorm(n=nums, mean=0, sd=4)
+  #Create the score
+  scores <- 1.25*x.values + 5 + epsilon
+  dataFrame <- data.frame(hours=x.values, scores=scores)
+  return (dataFrame)
+}
+df <- score(100)
+print(head(df))
+```
+**Check min, max of the scores**
+```{r}
+print(min(df$scores))
+print(max(df$scores))
+print(min(df$hours))
+print(max(df$hours))
+```
+
+**Draw the scatter plot**
+```{r}
+# Create a scatter plot
+plot(df$hours, df$scores, 
+     main = "Scatter Plot Example",  # Title of the plot
+     xlab = "hours",          # Label for the x-axis
+     ylab = "score",          # Label for the y-axis
+     pch = 19,                       # Specify the point character (optional)
+     col = "blue"                    # Specify the point color (optional)
+)
+```
+
+**Pearson correlation**
+
+```{r}
+cor(df, method="pearson")
+```
+
+**Interpretation of the result**
+
+- The correlation coefficient of approximately 0.9845 between "hours" and "scores" suggests a strong positive linear relationship between the number of hours spent studying (hours) and the scores achieved on an exam (scores).
+- his positive correlation indicates that as the number of hours spent studying increases, the scores tend to increase as well. In other words, students who study more hours tend to perform better on the exam.
+- Overall, the high positive correlation between "hours" and "scores" suggests a strong association between the two variables, indicating that increased study time is associated with higher exam scores.
+
+
+## Problem 2: Pearson hypothesis testing
+
+**Checking for normality**
+
+```{r}
+qqnorm(df$scores, main = "Q-Q Plot")  # Create the Q-Q plot
+qqline(df$scores) 
+```
+
+**Hypotheses**
+
+*Null Hypothesis (H0):*
+The null hypothesis (H0) for the Pearson correlation test is that there is no linear correlation between the number of studying hours (x) and the scores (y) of students. Mathematically, this is represented as:
+
+\[ H0: \rho = 0 \]
+
+Where:
+<br> \( \rho \) is the population correlation coefficient.
+
+*Alternative Hypothesis (H1):*
+The alternative hypothesis (H1) for the Pearson correlation test is that there is a linear correlation between the number of studying hours (x) and the scores (y) of students. Mathematically, this is represented as:
+
+\[ H1: \rho \neq 0 \]
+
+Where:
+<br> \( \rho \) is the population correlation coefficient.
+
+**p-value**
+
+```{r}
+cor_test <- cor.test(df$hours, df$scores, method = "pearson")
+cor_test
+```
+***Conclusion:*** p-value < 0.05 (level of significance here), therefore, there is enough evidence to reject H0, in other words, there is a linear correlation between the number of studying hours (and it is true, because we created a dataset with high correlation)

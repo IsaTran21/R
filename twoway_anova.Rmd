@@ -1,0 +1,285 @@
+---
+title: "TWO-WAY ANOVA"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: yes
+    toc_depth: 6
+---
+
+### Theory
+#### Two-Way ANOVA Table
+
+Below is the ANOVA table for the two-way ANOVA analysis:
+
+| Source of Variation     | Degrees of Freedom (df) | Sum of Squares (SS)   | Mean Square (MS)          | F-Statistic (F) |
+|-------------------------|-------------------------|-----------------------|---------------------------|------------------|
+| First Factor (Factor 1) | DFA                     | SSA                   | MSA = SSA / DFA           | F1               |
+| Second Factor (Factor 2)| DFB                     | SSB                   | MSB = SSB / DFB           | F2               |
+| Residuals               | DFE                     | SSE                   | MSE = SSE / DFE           |                  |
+| Total                   | DFT                     | SST                   |                           |                  |
+
+- DFA: Degrees of Freedom for Factor 1
+- DFB: Degrees of Freedom for Factor 2
+- DFE: Degrees of Freedom for Residuals
+- DFT: Total Degrees of Freedom
+
+- SSA: Sum of Squares for Factor 1
+- SSB: Sum of Squares for Factor 2
+- SSE: Residual Sum of Squares
+- SST: Total Sum of Squares
+
+- MSA: Mean Square for Factor 1 (MSA = SSA / DFA)
+- MSB: Mean Square for Factor 2 (MSB = SSB / DFB)
+- MSE: Mean Square for Residuals (MSE = SSE / DFE)
+
+- F1: F-Statistic for Factor 1 (F1 = MSA / MSE)
+- F2: F-Statistic for Factor 2 (F2 = MSB / MSE)
+
+
+### Problem 1: moisture of soil (without replication) - complete randomised design
+
+
+#### The dataset
+
+The moisture of the soil at different locations with different irrigation practice (A, B, C) (alpha=0.05). The dataset is as following:
+
+```{r}
+#Create the dataframe
+
+A <- c(7.6, 9.3, 11.8, 12.4, 13.5, 12.9, 7.1, 10.8, 10.3, 9.4)
+B <- c(9.1, 5.8, 5.9, 9.8, 9.3, 11.9, 3.6, 7.9, 8, 8.4)
+C <- c(8.2, 10.1, 10.2, 12.6, 12.6, 13.1, 8.9, 7.8, 11.8, 8.6)
+location <- c(1:10)
+method <- c("A", "B", "C")
+df <- data.frame(
+  location = rep(location, times=length(method)),
+  method = rep(method, each=c(length(A), length(B), length(C))),
+  values = c(A, B, C)
+)
+# Convert 'Method' and 'Location' to factors
+df$location <- as.factor(df$location)
+df$method <- as.factor(df$method)
+head(df)
+#View(df)
+```
+#### Perform ANOVA - 1
+
+
+**Hypotheses**
+
+H0: There are no significant differences in soil moisture levels among the different irrigation practices (A, B, C) at the various locations.
+
+H1: There is a significant difference in soil moisture levels among the different irrigation practices (A, B, C) at the various locations.
+
+We do not consider the relationship between the irrigation practices and the locations.
+
+
+```{r}
+anova.1 <- aov(values ~ location + method, data=df)
+summary(anova.1)
+```
+
+**Conclusion**
+p-value of method < 0.05, therefore, therefore reject H0.
+
+
+#### Check for ANOVA assumption
+##### Normality
+
+###### Botlox instead of QQ-plot
+(only preference, I do not draw 3 histograms)
+
+If the data is not normal distributed => use Friedman test instead.
+
+**Draw botplot (fast)**
+
+```{r}
+boxplot(values ~ method, data = df, 
+        xlab = "Method", ylab = "Values",
+        main = "Boxplots of Values by Method", col = "lightblue")
+```
+
+**Comment:**
+
+The A, B, C do not look really much distributed, because the median lines are not really in the middle. We continue on using testing.
+
+###### Shapiro-Wilk test
+
+**Hypotheses**
+
+H0: The data follows a normal distribution.
+
+H1: The data does not follow a normal distribution.
+```{r}
+ano.residuals <- residuals(object=anova.1)
+#Shapiro test
+
+shapiro.test(x=ano.residuals)
+```
+**Conclusion: ** the p-value > 0.05 => accept H0, the data is normaly distributed.
+
+##### Check for homoscedasticity
+
+###### Use Lavene's test
+
+**Hypotheses**
+
+***For locations:***
+<br>H0: The variances of the locations are equal (homoscedasticity).
+<br>H1: The variances of the locations are not equal (heteroscedasticity).
+
+***For irrigating practices:***
+
+<br>H0: The variances of the irrigating practices are equal (homoscedasticity).
+<br>H1: The variances of the irrigating practices are not equal (heteroscedasticity).
+
+```{r}
+library(car)
+lv1.1 <- leveneTest(df$values, df$location)
+print(lv1.1)
+lv2.1 <- leveneTest(df$values, df$method)
+print(lv2.1)
+```
+
+
+**Conclusion: ** the p-values < 0.05 for both location and irrigating practices => accept the two H0 => Homogeneity assumption is met.
+
+
+### Problem 2: Wheat yield (without replication) - Latin squared design
+
+To examine the affects of different types of fertilizer on wheat yield, and the affect of the soil quality, therefore, the experiment followed latin squared design (consider the affect of rows and columns), and we do not consider the relationship between the types of fertilizer and locations.
+
+```{r}
+library(readxl)
+df1 <- read_excel("Wheat.xlsx")
+df1$Treat <- as.factor(df1$Treat)
+df1$Row <- as.factor(df1$Row)
+df1$Col <- as.factor(df1$Col)
+head(df1)
+```
+
+**Hypotheses: ** 
+Note: each square is a treatment
+
+<br> H0: all treatment means (squares) are equal.
+<br> H1: all treatment means (squares) are not equal.
+
+```{r}
+anova.2 <- aov(Yield ~ Treat + Row + Col, data=df1)
+summary(anova.2)
+```
+
+Conclusion: p-value < 0.05 => reject H0.
+
+### Problem 2: Bird diets (with replication)
+
+12 birds (6 males and 6 females) are fed with 2 different type of diets (1, 2). Each diet is used for 3 female birds and 3 male birds. The value is the grams in 1 months, detail is in the following dataset.
+
+```{r}
+df2 <- read_excel("bird_diets.xlsx")
+df2$Gender <- as.factor(df2$Gender)
+df2$Diet<- as.factor(df2$Diet)
+head(df2)
+```
+
+**Hypotheses**
+
+Level of significance is 0.05
+
+*Null Hypotheses (H0):*
+<br> H0_gender: There is no significant difference in the mean amount of food eaten by male and female birds.
+<br> H0_diet: There is no significant difference in the mean amount of food eaten by birds fed with diet 1 and diet 2.
+<br> H0_interaction: The effect of diet on the amount of food eaten is the same for both male and female birds.
+
+*Alternative Hypotheses (H1):*
+<br> H1_gender: There is a significant difference in the mean amount of food eaten between male and female birds.
+<br> H1_diet: There is a significant difference in the mean amount of food eaten by birds fed with diet 1 and diet 2.
+<br> H1_interaction: The effect of diet on the amount of food eaten is different for male and female birds.
+
+**Perform ANOVA**
+
+```{r}
+anova.3 <- aov(Value ~ Gender * Diet, data=df2)
+summary(anova.3)
+```
+ 
+
+**Conclusion: **
+Based on p-values, only the H0 of Diet being rejected (the p-value of Diet  < 0.05).
+<br> Diets affect the the amount of food eaten by the birds.
+<br> Gender does not affect the amount of food eaten by the birds.
+<br> No interaction between the diets and the genders in terms of amount of food consumption.
+
+##### Check for homoscedasticity
+
+###### Use Lavene's test
+
+**Hypotheses**
+
+***For diet:***
+<br>H0: The variances of the diet are equal (homoscedasticity).
+<br>H1: The variances of the diet are not equal (heteroscedasticity).
+
+***For gender:***
+
+<br>H0: The variances of the gender are equal (homoscedasticity).
+<br>H1: The variances of the gender are not equal (heteroscedasticity).
+
+***For interaction:***
+
+<br>H0: The variances of the interaction are equal (homoscedasticity).
+<br>H1: The variances of the interaction are not equal (heteroscedasticity).
+
+```{r}
+homogeneity.groups <- leveneTest(anova.3)
+print("Interaction")
+print(homogeneity.groups)
+lv2.1 <- leveneTest(df2$Value, df2$Gender)
+print("Gender")
+print(lv2.1 )
+lv2.2 <- leveneTest(df2$Value, df2$Diet)
+print("Diet")
+print(lv2.2)
+```
+
+**Comment: ** The p-values of all tests > 0.05 => accept H0, in other words the homogeneity is met.
+
+
+##### Normality
+###### QQ-plot
+
+```{r}
+plot(anova.3,2)
+```
+
+
+###### Shapiro-Wilk test
+
+**Hypotheses**
+
+H0: The data follows a normal distribution.
+
+H1: The data does not follow a normal distribution.
+```{r}
+ano.residuals <- residuals(object=anova.3)
+shapiro.test(x=ano.residuals)
+```
+
+**Comment: **The p-value > 0.05 => accept H0, in other words, the data follows a normal distribution.
+
+###### The resudials vs fitted plot
+
+Ideally, in a well-fitted regression model, we want to see a random scatter of points with no clear pattern. This suggests that the model has captured the underlying relationship between the independent and dependent variables adequately.
+<br> The common patterns:
+<br> 1. Random Scatter: A random scatter of points with no clear pattern suggests a well-fitted model and adherence to linear regression assumptions.
+<br> 2. U-Shaped or Funnel Shape: Residuals forming a U-shaped or funnel shape indicate heteroscedasticity, where the variance of residuals varies across the range of the independent variable(s).
+<br> 3. Curved Pattern: A curved pattern suggests a non-linear relationship between variables, potentially requiring polynomial terms or a different regression model.
+<br> 4. Outliers or Clusters: Outliers or clusters of points away from the main cluster may be influential data points that impact model fit, requiring further investigation.
+
+```{r}
+plot(anova.3,1)
+```
+
+
