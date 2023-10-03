@@ -1,0 +1,534 @@
+---
+title: "Hypotheses testing in R"
+author: "Thuy Tran"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## Test for proportion
+
+### 1 sample
+### Problem 1
+Problem: ask 100 people to know if they had breadfast on Saturday morning, suppose 42 people say yes. Does this support the hypothesis that the true proportion is 50%?
+We perform the Z-test for proportion
+<br>H0: p = 0
+<br>HA: p ≠ 0
+```{r}
+# To perform z test
+# A continuity correction be applied
+prop.test(42, 100, p=0.5,
+      alternative="two.sided",
+      conf.level=0.95,
+      correct=TRUE)
+```
+We don't have enough evidence to reject the Null hypothesis because the p-value is greater than 0.05 (the level of significance), therefore we accept the H0.
+How about when we increase the sample size as well as the population size?
+Problem: ask 1000 people to know if they had breadfast on Saturday morning, suppose 420 people say yes. Does this support the hypothesis that the true proportion is 50%?
+$$
+z = \frac{\hat{p} - p}{\sqrt{\frac{p(1-p)}{n}}}
+$$
+
+Our first intuition is that when we look at the formula of z, we are able to infer that with the same proportion and the bigger n (population size) our evidence is "kind of significant", the z must be bigger that the previous one. And we can look into the relationship between the z and the p-value (because I don't want to base on the z-table!).
+A high (absolute) z-value, meaning that a data point is significantly far from the mean, corresponds to a low p-value. In other words, if a z-value is very large in magnitude (either positive or negative), it suggests that the data point is very unlikely to occur if the null hypothesis is true. Consequently, the p-value associated with such a z-value is small, indicating strong evidence against the null hypothesis.
+
+Conversely, a low (absolute) z-value, meaning that a data point is close to the mean, corresponds to a high p-value. If a z-value is close to zero, it suggests that the data point is likely to occur even if the null hypothesis is true. Thus, the p-value associated with such a z-value is large, indicating weak evidence against the null hypothesis.
+=> the p-value must be smaller than the previous one too. We can check that assumption using the same prop.test as above but with different population size.
+```{r}
+# To perform z test
+# A continuity correction be applied
+prop.test(420, 1000, p=0.5,
+      alternative="two.sided",
+      conf.level=0.95,
+      correct=TRUE)
+```
+Excellent, the p-value now is so small and less than 0.05, therefore, we have enough evidence to reject the H0,in oher words, the true p is not equal to 0.5.
+
+
+### 2 samples
+
+The test statistic for a two-sided two-sample proportion test is calculated as follows:
+
+\[ z = \frac{\hat{p}_1 - \hat{p}_2}{\sqrt{\hat{p}(1 - \hat{p})\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}} \]
+
+Here, \(\hat{p}_1\) and \(\hat{p}_2\) are the sample proportions, \(n_1\) and \(n_2\) are the sample sizes, and \(\hat{p}\) is the pooled proportion.
+
+The pooled proportion (\(\hat{p}\)) is calculated as:
+
+\[
+\hat{p} = \frac{{x_1 + x_2}}{{n_1 + n_2}}
+\]
+
+Where:
+<br> \(x_1\) and \(x_2\) are the number of successes (e.g., the number of "yes" responses) in the two samples.
+<br> \(n_1\) and \(n_2\) are the sample sizes of the two samples.
+<br> \[
+\hat{p}_1 = \frac{x_1}{n_1}
+\]
+<br> \[
+\hat{p}_2 = \frac{x_2}{n_2}
+\]
+
+The test statistic for a one-sided (greater than) two-sample proportion test is calculated as:
+
+\[
+z = \frac{{\hat{p}_1 - \hat{p}_2}}{{\sqrt{\hat{p}_2(1 - \hat{p}_2)\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}}
+\]
+
+The test statistic for a one-sided (less than) two-sample proportion test is calculated as:
+
+\[
+z = \frac{{\hat{p}_1 - \hat{p}_2}}{{\sqrt{\hat{p}_1(1 - \hat{p}_1)\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}}
+\]
+
+### Problem 2:
+Suppose we want to compare the proportion of customers who purchased Product A and Product B from two different stores. We collect samples of 100 customers from each store, and the proportions who purchased the respective products are as follows:
+
+  - Store 1 (Product A): 0.30
+  - Store 2 (Product B): 0.25
+  
+Let's \(\hat{p}_1\) represent the sample proportion for Group 1 (e.g., the proportion of customers who purchased Product A in Store 1).
+Let's \(\hat{p}_2\)  represent the sample proportion for Group 2 (e.g., the proportion of customers who purchased Product B in Store 2).
+
+*Two-Sided Test: *
+<br>H0: \(\hat{p}_1 = \hat{p}_2\)
+<br>H1: \(\hat{p}_1 \neq \hat{p}_2\)
+
+*One-Sided Test (Greater Than):*
+<br>H0: \(\hat{p}_1 \leq \hat{p}_2\)
+<br>H1: \(\hat{p}_1 > \hat{p}_2\)
+
+*One-Sided Test (Less Than):*
+<br>H0: \(\hat{p}_1 \geq \hat{p}_2\)
+<br>H1: \(\hat{p}_1 < \hat{p}_2\)
+
+
+*Two-Sided Test: *
+```{r}
+# Sample data
+data1 <- c(30, 70)  # Number of successes for Product A and non-Product A (100 - 30)
+data2 <- c(25, 75)  # Number of successes for Product B and non-Product B (100 - 25)
+
+# Perform the two-sided proportion test
+result <- prop.test(x = data1, n = data1 + data2)
+
+# Print the result
+result
+```
+Conclusion: p-value > 0.05, therefore, there is not enough evidence to reject H0 => accept H0.
+
+*One-Sided Test (Greater Than):*
+
+```{r}
+# Sample data
+data1 <- c(30, 70)  # Number of successes for Product A and non-Product A (100 - 30)
+data2 <- c(25, 75)  # Number of successes for Product B and non-Product B (100 - 25)
+
+# Perform the one-sided proportion test (greater than)
+result <- prop.test(x = data1, n = data1 + data2, alternative = "greater")
+
+# Print the result
+result
+
+```
+Conclusion: p-value > 0.05, therefore, there is not enough evidence to reject H0 => accept H0.
+
+
+Small question: In a hypothesis test, what if the p-value is greater than alpha in three scenarios: two-sided, less than, and greater than?
+
+
+Answer: In all these cases, failing to reject the null hypothesis means that we do not have sufficient statistical evidence to support the alternative hypothesis. It does not prove that the null hypothesis is true; rather, it means that, based on the sample data and the chosen significance level (α), we do not have strong enough evidence to make a conclusion about the population parameter of interest. These results are inconclusive or an indication that further investigation may be needed.
+
+
+*One-Sided Test (Less Than):*
+
+```{r}
+# Sample data
+data1 <- c(30, 70)  # Number of successes for Product A and non-Product A (100 - 30)
+data2 <- c(35, 65)  # Number of successes for Product B and non-Product B (100 - 35)
+
+# Perform the one-sided proportion test (less than)
+result <- prop.test(x = data1, n = data1 + data2, alternative = "less")
+
+# Print the result
+result
+
+```
+
+
+## Test for means
+
+### Problem 2:
+During the Christmas and New Year holiday period, the Department of Traffic Safety has conducted a statistical study and found that there were 500 fatalities and 25,000 injuries due to traffic accidents nationwide. According to the Department of Traffic Safety's announcement, approximately 50% of the accidents are related to alcohol. A random survey of 120 accidents reveals that 67 of them were influenced by alcohol. Use the data provided to test the Department of Traffic Safety's assertion at a significance level of α = 5%.
+Solution: 
+H0: The proportion of accidents related to alcohol is 50% (p = 0.50).
+HA: The proportion of accidents related to alcohol is not equal to 50% (p ≠ 0.50).
+```{r}
+# To perform z test
+# A continuity correction be applied
+prop.test(67, 120, p=0.5,
+      alternative="two.sided",
+      conf.level=0.95,
+      correct=TRUE)
+```
+With the deduction like above (p-value = 0.2353 > 0.05), we don't have enough evidence to reject the H0 hypothesis, therefore, we accept the H0 hypothesis which is true p is equal to 0.5.
+## Test for means
+The t-test
+First, we need to know about the t-test and z-test, when?
+
+**Use a Z-test when:**
+
+- Sample size is large (typically n > 30): Z-tests are more appropriate when you have a large sample size because the sampling distribution of the sample mean becomes approximately normal due to the Central Limit Theorem. With a large sample size, you can assume that the population standard deviation is known or estimated accurately from the sample.
+
+- Population standard deviation is known: Z-tests require knowledge of the population standard deviation. If you have access to this information or can accurately estimate it from your sample, then a Z-test is suitable.
+
+- Testing population means: Z-tests are often used to compare a sample mean to a known or hypothesized population mean. For example, testing whether the average height of a sample of students is significantly different from the average height of the entire student population.
+
+**Use a t-test when:**
+
+- Sample size is small (typically n < 30): T-tests are more appropriate when dealing with small sample sizes. The t-distribution has heavier tails than the normal distribution, which accounts for the increased uncertainty associated with small samples.
+
+- Population standard deviation is unknown: If you don't have information about the population standard deviation and need to estimate it from your sample, a t-test is typically used. In this case, you use the sample standard deviation in the calculation.
+
+- Testing population means: T-tests can be used to compare a sample mean to a hypothesized population mean, similar to Z-tests. The choice between one-sample t-test, independent two-sample t-test, or paired two-sample t-test depends on the specific experimental design.
+
+- Testing the difference between two groups (e.g., in a two-sample scenario): When comparing the means of two independent groups or two related groups (paired data), you often use two-sample t-tests or paired t-tests, respectively.
+
+#### Theory for t-test
+
+##### One-Sample T-Test Formula
+When we want to test if a sample mean is significantly different from a known or hypothesized population mean (μ), we can use the one-sample t-test
+The formula for the one-sample t-test is as follows:
+
+\[ t = \frac{{\bar{x} - \mu}}{{s / \sqrt{n}}} \]
+
+Where:
+<br> \( t \) is the t-statistic.
+<br> \( \bar{x} \) is the sample mean.
+<br> \( \mu \) is the population mean you're testing against.
+<br> \( s \) is the sample standard deviation.
+<br> \( n \) is the sample size.
+
+##### Independent Two-Sample T-Test Formula
+
+When we want to compare the means of two independent samples to see if they are significantly different from each other, we can use the independent two-sample t-test
+The formula for the independent two-sample t-test is as follows:
+
+\[ t = \frac{{\bar{x}_1 - \bar{x}_2}}{{\sqrt{\frac{{s_1^2}}{{n_1}} + \frac{{s_2^2}}{{n_2}}}}} \]
+
+Where:
+<br> \( t \) is the t-statistic.
+<br> \( \bar{x}_1 \) and \( \bar{x}_2 \) are the sample means of the two groups.
+<br> \( s_1 \) and \( s_2 \) are the sample standard deviations of the two groups.
+<br> \( n_1 \) and \( n_2 \) are the sample sizes of the two groups.
+
+##### Paired Two-Sample T-Test Formula
+
+When we have paired or related data (e.g., before and after measurements) and want to test if there is a significant difference in the means of the paired observations, we can use the paired two-sample t-test. The formula for the paired two-sample t-test is as follows:
+
+\[ t = \frac{{\bar{d}}}{{s_d / \sqrt{n}}} \]
+
+Where:
+<br> \( t \) is the t-statistic.
+<br> \( \bar{d} \) is the mean of the differences between paired observations.
+<br> \( s_d \) is the standard deviation of the differences.
+<br> \( n \) is the number of pairs.
+
+### problem 3:
+
+A chocolate factory claims that their chocolate bar have an average weight of 50 grams. A customer wants to test if the average weight of a random sample of 10 chocolate bars is significantly different from 50 grams. Level of significance is 0.05.
+
+**Solutions**:
+
+
+Let's \(\mu\) the average weight of the chocolate bars.
+*Two-Sided Test: *
+<br>H0: \(\mu = 50\)
+<br>H1: \(\mu \neq 50\)
+
+*One-Sided Test (Greater Than):*
+<br>H0:\(\mu \leq 50\)
+<br>H1:\(\mu > 50\)
+
+*One-Sided Test (Less Than):*
+<br>H0:\(\mu \geq 50\)
+<br>H1:\(\mu < 50\)
+
+Using R:
+```{r}
+# Sample data
+chocolate_weights <- c(51, 49, 52, 48, 50, 49, 50, 51, 52, 50, 55, 52, 53, 55, 54)
+
+# Hypothesized population mean
+population_mean <- 50
+
+# Perform two-sided one-sample t-test
+result_two_sided <- t.test(chocolate_weights, mu = population_mean)
+
+# Print the results
+result_two_sided
+
+```
+
+Conclusion: p-value < 0.05, there is enough evidence to reject H0 => reject H0.
+
+
+```{r}
+# Perform one-sided (greater than) one-sample t-test
+result_greater_than <- t.test(chocolate_weights, mu = population_mean, alternative = "greater")
+# Print the results
+result_greater_than
+
+```
+Conclusion: p-value < 0.05, there is enough evidence to reject H0 => reject H0.
+
+```{r}
+# Perform one-sided (less than) one-sample t-test
+result_less_than <- t.test(chocolate_weights, mu = population_mean, alternative = "less")
+# Print the results
+result_less_than
+
+```
+
+Conclusion: p-value > 0.05 => accept H0.
+
+Small note:
+The upper limit (52.38441) represents the maximum value within the interval and suggests that the population parameter of interest (e.g., population mean) is unlikely to exceed this value.
+
+The lower limit is left open-ended with −∞ because the data does not provide sufficient information to estimate a lower bound confidently. This could be due to strong skewness or asymmetry in the data distribution.
+
+
+### Problem 4:
+
+We want to determine if there is a significant difference in the average performance scores between two groups of players (Group A and Group B). Let's assump that the level of significance = 0.05.
+
+Solutions:
+
+Let's \(\mu_1\),\(\mu_2\)  the average performance scores of Group A, Group B respectively.
+
+*Two-Sided Test:*
+<br>H0: \(\mu_1 = \mu_2\)
+<br>H1: \(\mu_1 \neq \mu_2\)
+
+*One-Sided Test (Greater Than):*
+<br>H0: \(\mu_1 \leq \mu_2\)
+<br>H1: \(\mu_1 > \mu_2\)
+
+*One-Sided Test (Less Than):*
+<br>H0: \(\mu_1 \geq \mu_2\)
+<br>H1: \(\mu_1 < \mu_2\)
+
+Using R
+
+```{r}
+# Sample data for two groups
+group_a_scores <- c(85, 88, 90, 92, 86)
+group_b_scores <- c(78, 82, 80, 85, 81)
+```
+
+**Testing for normality using QQ-plot:**
+
+```{r}
+# Set up a 1x2 grid of plots for side-by-side comparison
+par(mfrow=c(1,2))
+
+# Create a QQ plot for group_a_scores in the left panel with labels
+qqnorm(group_a_scores, main = "QQ Plot of Group A Scores", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
+# Add a reference line to the group_a_scores QQ plot
+qqline(group_a_scores, col=2)
+# Create a QQ plot for group_b_scores in the right panel with labels
+qqnorm(group_b_scores, main = "QQ Plot of Group B Scores", xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
+# Add a reference line to the group_b_scores QQ plot
+qqline(group_b_scores, col=2)
+```
+
+
+*Two-Sided Test:*
+```{r}
+# Perform two-sided independent two-sample t-test
+result_two_sided <- t.test(group_a_scores, group_b_scores)
+
+# Print the results
+result_two_sided
+```
+Conclusion: p-value < 0.05 => enough evidence to reject H0.
+
+*One-Sided Test (Greater Than):*
+
+
+```{r}
+# Perform one-sided (greater than) independent two-sample t-test
+result_greater_than <- t.test(group_a_scores, group_b_scores, alternative = "greater")
+
+# Print the results
+result_greater_than
+```
+Conclusion: p-value < 0.05 => enough evidence to reject H0.
+
+
+*One-Sided Test (Less Than):*
+
+
+```{r}
+# Perform one-sided (less than) independent two-sample t-test
+result_less_than <- t.test(group_a_scores, group_b_scores, alternative = "less")
+
+# Print the results
+result_less_than
+```
+Conclusion: p-value > 0.05 => Not enough evidence to reject H0 => accept H0.
+
+=> Group A performs worse than Group B statistically.
+
+### Problem 5:
+
+
+We want to investigate whether a new training program has a significant impact on employees' performance by comparing their test scores before and after the training. Level of significance is 0.05.
+
+
+Solutions:
+
+Let's \(\mu_d\) the average difference in test scores before and after the training
+
+*Two-Sided Test:*
+
+<br>H0: \(\mu_d = 0\)
+<br>H1: \(\mu_d \neq 0\)
+
+*One-Sided Test (Less Than):*
+<br>H0: \(\mu_d \geq 0\)
+<br>H1: \(\mu_d < 0\)
+
+
+*One-Sided Test (Greater Than):*
+<br>H0: \(\mu_d \leq 0\)
+<br>H1: \(\mu_d > 0\)
+
+Use R
+
+
+*Two-Sided Test:*
+
+```{r}
+# Scores before training
+before_training <- c(72, 68, 75, 70, 78)
+# Scores after training
+after_training <- c(80, 75, 82, 79, 85)
+# Perform two-sided paired two-sample t-test
+result_two_sided <- t.test(before_training, after_training, paired = TRUE)
+# Print the results
+result_two_sided
+
+```
+Conclusion: p-value < 0.05 => reject H0.
+
+*One-Sided Test (Less Than):*
+
+```{r}
+# Perform one-sided (less than) paired two-sample t-test
+result_less_than <- t.test(before_training, after_training, paired = TRUE, alternative = "less")
+
+# Print the results
+result_less_than
+
+```
+Conclusion: p-value < 0.05 => reject H0.
+
+*One-Sided Test (Greater Than):*
+
+```{r}
+# Perform one-sided (greater than) paired two-sample t-test
+result_greater_than <- t.test(before_training, after_training, paired = TRUE, alternative = "greater")
+
+# Print the results
+result_greater_than
+
+```
+Conclusion: p-value > 0.05 => accept H0.
+
+### 2 samples test for means
+
+The formula:
+***Unequal variance***
+
+\[ t = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}, \text{ where } \bar{x}_1 \text{ and } \bar{x}_2 \text{ are sample means, } s_1^2 \text{ and } s_2^2 \text{ are sample variances, } n_1 \text{ and } n_2 \text{ are sample sizes} \]
+
+**Degrees of Freedom (df):**
+\[
+df \approx \frac{\left(\frac{S_1^2}{n_1} + \frac{S_2^2}{n_2}\right)^2}{\frac{\left(\frac{S_1^2}{n_1}\right)^2}{n_1 - 1} + \frac{\left(\frac{S_2^2}{n_2}\right)^2}{n_2 - 1}}
+\]
+
+**The sample variance:**
+\[
+s_1^2 = \frac{1}{{n_1 - 1}} \sum_{{i=1}}^{{n_1}} (x_{1i} - \bar{x}_1)^2
+\]
+
+\[
+s_2^2 = \frac{1}{{n_2 - 1}} \sum_{{i=1}}^{{n_2}} (x_{2i} - \bar{x}_2)^2
+\]
+
+***Equal variance***
+
+
+\[
+t = \frac{{\bar{x}_1 - \bar{x}_2}}{{\sqrt{\frac{{S_p^2}}{{n_1}} + \frac{{S_p^2}}{{n_2}}}}}
+\]
+
+The pooled variance:
+
+\[
+S_p^2 = \frac{{(n_1 - 1)S_1^2 + (n_2 - 1)S_2^2}}{{n_1 + n_2 - 2}}
+\]
+
+Where:
+<br> \(S_1^2\) and \(S_2^2\) are the sample variances for Sample 1 and Sample 2, respectively.
+<br> \(n_1\) and \(n_2\) are the sample sizes for Sample 1 and Sample 2, respectively.
+<br> \(S_p^2\) is the pooled variance estimate.
+
+** Degrees of Freedom (df):**
+
+\[
+df = n_1 + n_2 - 2
+\]
+
+
+### Problem 6:
+
+
+Suppose we want to compare the average test scores of students from two different schools. We collect samples of test scores from each school, and the summary statistics are as follows:
+
+- School 1: Mean (\(\bar{x}_1\): 85), Variance (\(s_1^2\): 25), Sample Size (\(n_1\): 30)
+- School 2: Mean (\(\bar{x}_2\): 90), Variance (\(s_2^2\): 36), Sample Size (\(n_2\): 40)
+
+I only demonstrate using the two-sided test, we also perform the less than or greater using the alternative = "less" or alternative = "greater".
+
+
+Scenario 1: Two-Sample T-Test with Equal Variance (Homoscedasticity)
+
+In this scenario, we are conducting a two-sample t-test to compare the means of two independent groups or populations. We assume that the variances of both groups are equal (homoscedasticity). This scenario is suitable when we believe that the variances in the two groups are approximately the same.
+<br> Let's \(\mu_1\) and \(\mu_1\) are the means of group A and group B respectively.
+<br> H0: \(\mu_1 = \mu_2\) (Means are equal)
+<br> H1: \(\mu_1 \neq \mu_2\) (Means are not equal)
+```{r}
+# No need to test for the normal distributions of the samples, therefore, we use rnorm for sure!
+scores_school1 <- rnorm(30, mean = 85, sd = 10)  # Sample 1 (School 1)
+scores_school2 <- rnorm(40, mean = 90, sd = 12)  # Sample 2 (School 2)
+
+# Perform two-sample t-test assuming equal variance
+result_equal_variance <- t.test(scores_school1, scores_school2, var.equal = TRUE)
+
+# Print the results
+print(result_equal_variance)
+```
+Conclusion: p-value > 0.05, not enough evidence to reject H0 => accept H0.
+
+**Two-Sample T-Test with Unequal Variance (Heteroscedasticity)**
+
+Note that the var.equal = FALSE
+
+```{r}
+# Perform two-sample t-test assuming unequal variance
+result_unequal_variance <- t.test(scores_school1, scores_school2, var.equal = FALSE)
+
+# Print the results
+print(result_unequal_variance)
+```
+Conclusion: p-value < 0.05, enough evidence to reject H0.
